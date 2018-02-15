@@ -62,6 +62,12 @@ var yargs = require('yargs')
       demand: false,
       describe: 'remove figlet banner'
     })
+    .option('l', {
+      alias: 'limit',
+      default: process.env.LIMIT || '1kb',  
+      demand: false,
+      describe: 'request limit'
+    })
     .help()
     .version()
     .strict();
@@ -100,10 +106,10 @@ if (!TARGET.match(/^https?:\/\//)) {
 
 var BIND_ADDRESS = argv.b;
 var PORT = argv.p;
-
+var REQ_LIMIT = argv.l;
 
 var proxy = httpProxy.createProxyServer({
-	ssl: myssl,
+    ssl: myssl,
     target: TARGET,
     changeOrigin: true,
     secure: true
@@ -111,6 +117,7 @@ var proxy = httpProxy.createProxyServer({
 
 var app = express();
 app.use(compress());
+app.use(bodyParser.raw({limit: REQ_LIMIT, type: function() { return true; }}));
 app.use(basicAuth(argv.u, argv.a));
 app.use(bodyParser.raw({type: function() { return true; }}));
 app.use(function (req, res) {
